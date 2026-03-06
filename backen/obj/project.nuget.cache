@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "gRYfir1VK10=",
+  "success": true,
+  "projectFilePath": "C:\\TFGBacken\\backen\\backen.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Playe\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.3\\microsoft.aspnetcore.openapi.9.0.3.nupkg.sha512",
+    "C:\\Users\\Playe\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
