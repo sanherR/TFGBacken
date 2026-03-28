@@ -1,22 +1,74 @@
+using Microsoft.EntityFrameworkCore;
 using TFGBACKEN.Data;
 using TFGBACKEN.Repositories;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ==========================================
+// 1. CONFIGURACIÓN DE SERVICIOS (Dependency Injection)
+// ==========================================
+
+builder.Services.AddControllers();
+
+// Configurar Swagger/OpenAPI
+// Importante: Asegúrate de haber ejecutado: dotnet add package Swashbuckle.AspNetCore
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { 
+        Title = "TFG Backend API", 
+        Version = "v1",
+        Description = "API para gestión de usuarios y productos del TFG" 
+    });
+});
 
 // Configurar DbContext para MySQL
 builder.Services.AddDbContext<TfgDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 33)) // versión de MySQL
+        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     )
 );
 
-// Repositories
+// Inyección de Repositorios
 builder.Services.AddScoped<UsuarioRepository>();
+// Si tienes un ProductoRepository, añádelo aquí también:
+// builder.Services.AddScoped<ProductoRepository>();
 
-builder.Services.AddControllers();
+// Configuración de CORS (Permite que el Frontend se conecte)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
 
 var app = builder.Build();
+
+// ==========================================
+// 2. CONFIGURACIÓN DEL PIPELINE (Middleware)
+// ==========================================
+
+// Habilitar Swagger siempre en desarrollo para probar fácilmente
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TFG API v1");
+        c.RoutePrefix = "swagger"; // Esto hace que entres por http://localhost:5062/swagger
+    });
+}
+
+// Redirección HTTPS opcional (puedes comentarlo si da problemas en local)
+// app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
+
+app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
