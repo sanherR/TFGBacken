@@ -10,10 +10,14 @@ namespace TFGBACKEN.Controllers
     public class ProductosController : ControllerBase
     {
         private readonly TfgDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductosController(TfgDbContext context)
+
+        public ProductosController(TfgDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+                    _env = env;
+
         }
 
         // GET: api/Productos (Para ver todos los anuncios)
@@ -25,11 +29,55 @@ namespace TFGBACKEN.Controllers
 
         // POST: api/Productos (Para subir un producto nuevo)
         [HttpPost]
-        public async Task<ActionResult<Producto>> PostProducto(Producto producto)
+    public async Task<ActionResult<Producto>> PostProducto([FromForm] string nombre,
+                                                        [FromForm] string descripcion,
+                                                        [FromForm] decimal precio,
+                                                        [FromForm]  IFormFile imagen) // Recibimos la URL directamente
+    {
+       
+            string imagenUrl = null;
+
+            if (imagen!=null && imagen.Length > 0)
+             
+                {
+                    try {
+                            var carpeta = Path.Combine(_env.WebRootPath, "images");
+                            if (!Directory.Exists(carpeta))
+                                Directory.CreateDirectory(carpeta);
+
+                            var nombreArchivo = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
+                            var rutaCompleta = Path.Combine(carpeta, nombreArchivo);
+
+                            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                            {
+                                await imagen.CopyToAsync(stream);
+                            }
+
+                            imagenUrl = $"/images/{nombreArchivo}"; // Guardamos la URL relativa 
+                        } 
+                            catch (Exception ex)
+                        {
+                            return StatusCode(500, $"Error al guardar la imagen: {ex.Message}");
+                        }
+            }
+            
+            
+
+        var producto = new Producto
         {
-            _context.Productos.Add(producto);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetProductos), new { id = producto.Id }, producto);
-        }
+            Nombre = nombre,
+            Descripcion = descripcion,
+            Precio = precio,
+            ImagenUrl = imagenUrl,
+            stock = 1,       
+            UsuarioId = 1,   
+            Categoria = 1    
+        };
+
+        _context.Productos.Add(producto);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetProductos), new { id = producto.Id }, producto);
     }
+        }
 }

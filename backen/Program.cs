@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TFGBACKEN.Data;
 using TFGBACKEN.Repositories;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,15 @@ builder.Services.AddDbContext<TfgDbContext>(options =>
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     )
 );
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50_000_000; // 50 MB
+});
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 50_000_000; // 50 MB
+    serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5); // Evita cierre prematuro de socket
+});
 
 // Inyección de Repositorios
 builder.Services.AddScoped<UsuarioRepository>();
@@ -70,5 +80,8 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.Urls.Add("http://0.0.0.0:5062");
+
 
 app.Run();

@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\TFGBacken\\backen\\wwwroot\\images\\0b2aa3d7-de49-46d6-a5bc-bc6e4457e427.jpg",
+      "PackagePath": "staticwebassets\\images\\0b2aa3d7-de49-46d6-a5bc-bc6e4457e427.jpg"
+    },
+    {
+      "Id": "C:\\TFGBacken\\backen\\wwwroot\\images\\1cc9cc1b-41e9-4763-9382-d838300c1902.jpg",
+      "PackagePath": "staticwebassets\\images\\1cc9cc1b-41e9-4763-9382-d838300c1902.jpg"
+    },
+    {
+      "Id": "C:\\TFGBacken\\backen\\wwwroot\\images\\c1217762-a9ac-4643-8d81-178ed4546746.jpg",
+      "PackagePath": "staticwebassets\\images\\c1217762-a9ac-4643-8d81-178ed4546746.jpg"
+    },
+    {
+      "Id": "C:\\TFGBacken\\backen\\wwwroot\\images\\e4a3b077-6e41-464b-9647-cc0083842ebb.jpg",
+      "PackagePath": "staticwebassets\\images\\e4a3b077-6e41-464b-9647-cc0083842ebb.jpg"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.backen.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.backen.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.build.backen.props",
+      "PackagePath": "build\\backen.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildMultiTargeting.backen.props",
+      "PackagePath": "buildMultiTargeting\\backen.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildTransitive.backen.props",
+      "PackagePath": "buildTransitive\\backen.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
