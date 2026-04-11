@@ -21,11 +21,16 @@ namespace TFGBACKEN.Controllers
         }
 
         // GET: api/Productos (Para ver todos los anuncios)
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
-        {
-            return await _context.Productos.ToListAsync();
-        }
+    public async Task<IActionResult> GetProductos()
+    {
+            var productos = await _context.Productos
+                .AsNoTracking()
+                .ToListAsync();
+
+
+        return Ok(productos);
+
+    }
 
         // POST: api/Productos (Para subir un producto nuevo)
         [HttpPost]

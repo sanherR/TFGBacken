@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TFGBACKEN.Models
 {
-    [Table("Mensajes")]
     public class Mensaje
     {
         [Key]

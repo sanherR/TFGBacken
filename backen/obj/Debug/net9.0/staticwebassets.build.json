@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "eNnCpdmAOifwo2ZuppFmchoNJx7n1NzTNXBe9rd8AQg=",
+  "Hash": "YAIb0DGAcVUoC6o21EiZ1TZhFmZLIDGG4JcPhSex1hU=",
   "Source": "backen",
   "BasePath": "_content/backen",
   "Mode": "Default",
@@ -57,6 +57,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\1cc9cc1b-41e9-4763-9382-d838300c1902.jpg"
+    },
+    {
+      "Identity": "C:\\TFGBacken\\backen\\wwwroot\\images\\6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca.jpg",
+      "SourceId": "backen",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\TFGBacken\\backen\\wwwroot\\",
+      "BasePath": "_content/backen",
+      "RelativePath": "images/6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "rgaeyzemmq",
+      "Integrity": "e1qgqoj9rUt0ssFrtOOQcPh88t9Atvhxv5lHm3T5vSM=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca.jpg"
     },
     {
       "Identity": "C:\\TFGBacken\\backen\\wwwroot\\images\\c1217762-a9ac-4643-8d81-178ed4546746.jpg",
@@ -259,6 +280,88 @@
         {
           "Name": "label",
           "Value": "images/1cc9cc1b-41e9-4763-9382-d838300c1902.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e1qgqoj9rUt0ssFrtOOQcPh88t9Atvhxv5lHm3T5vSM="
+        }
+      ]
+    },
+    {
+      "Route": "images/6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca.jpg",
+      "AssetFile": "C:\\TFGBacken\\backen\\wwwroot\\images\\6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "503896"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e1qgqoj9rUt0ssFrtOOQcPh88t9Atvhxv5lHm3T5vSM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 07 Apr 2026 19:33:17 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e1qgqoj9rUt0ssFrtOOQcPh88t9Atvhxv5lHm3T5vSM="
+        }
+      ]
+    },
+    {
+      "Route": "images/6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca.rgaeyzemmq.jpg",
+      "AssetFile": "C:\\TFGBacken\\backen\\wwwroot\\images\\6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "503896"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e1qgqoj9rUt0ssFrtOOQcPh88t9Atvhxv5lHm3T5vSM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 07 Apr 2026 19:33:17 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "rgaeyzemmq"
+        },
+        {
+          "Name": "label",
+          "Value": "images/6e51fd40-bf5c-4c64-b6e9-74c6a71a27ca.jpg"
         },
         {
           "Name": "integrity",

@@ -23,14 +23,14 @@ namespace TFGBACKEN.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Usuario>().ToTable("Usuarios");
-            modelBuilder.Entity<Producto>().ToTable("Productos");
-            modelBuilder.Entity<Categoria>().ToTable("Categorias");
-            modelBuilder.Entity<Mensaje>().ToTable("Mensajes");
-            modelBuilder.Entity<Favorito>().ToTable("Favoritos");
-            modelBuilder.Entity<Pedido>().ToTable("Pedidos");
-            modelBuilder.Entity<DetallePedido>().ToTable("Detalles_Pedido");
-            modelBuilder.Entity<Valoracion>().ToTable("Valoraciones");
+            modelBuilder.Entity<Usuario>().ToTable("usuarios");
+            modelBuilder.Entity<Producto>().ToTable("productos");
+            modelBuilder.Entity<Categoria>().ToTable("categorias");
+            modelBuilder.Entity<Mensaje>().ToTable("mensajes");
+            modelBuilder.Entity<Favorito>().ToTable("favoritos");
+            modelBuilder.Entity<Pedido>().ToTable("pedidos");
+            modelBuilder.Entity<DetallePedido>().ToTable("detalles_pedido");
+            modelBuilder.Entity<Valoracion>().ToTable("valoraciones");
         }
     }
 }

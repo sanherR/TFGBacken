@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+
 // Configurar Swagger/OpenAPI
 // Importante: Asegúrate de haber ejecutado: dotnet add package Swashbuckle.AspNetCore
 builder.Services.AddEndpointsApiExplorer();
@@ -78,6 +79,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 
 app.UseAuthorization();
+
+app.UseStaticFiles();
 
 app.MapControllers();
 

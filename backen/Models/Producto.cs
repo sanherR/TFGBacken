@@ -27,7 +27,10 @@ namespace TFGBACKEN.Models
         public int stock { get; set; } // Para controlar el stock del producto
         [Column("imagen_url")]
         public string? ImagenUrl { get; set; } // Para el link de la foto
-        
+
+        [Column("grupo")]
+        public string? Grupo { get; set; } // Para agrupar los productos
+
         // El ID del usuario que sube el producto
         [Column("usuario_id")]
         public int UsuarioId { get; set; } 
