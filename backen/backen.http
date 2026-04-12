@@ -1,4 +1,4 @@
-@backen_HostAddress = http://localhost:5062/api/
+@backen_HostAddress = http://localhost:5062/api/productos
 
 GET {{backen_HostAddress}}/weatherforecast/
 Accept: application/json
