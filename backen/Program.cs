@@ -3,14 +3,60 @@ using TFGBACKEN.Data;
 using TFGBACKEN.Repositories;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using TFGBACKEN.Services;
+using Microsoft.Extensions.Options;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ==========================================
 // 1. CONFIGURACIÓN DE SERVICIOS (Dependency Injection)
 // ==========================================
+var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+
+        ClockSkew = TimeSpan.Zero // 🔥 IMPORTANTE (evita errores raros de expiración)
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("JWT ERROR: " + context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            Console.WriteLine(" JWT CHALLENGE: " + context.ErrorDescription);
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
+builder.WebHost.UseUrls("http://0.0.0.0:5062");
+
+
 
 
 // Configurar Swagger/OpenAPI
@@ -24,6 +70,10 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API para gestión de usuarios y productos del TFG" 
     });
 });
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50_000_000; // 50 MB
+});
 
 // Configurar DbContext para MySQL
 builder.Services.AddDbContext<TfgDbContext>(options =>
@@ -32,10 +82,6 @@ builder.Services.AddDbContext<TfgDbContext>(options =>
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     )
 );
-builder.Services.Configure<FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = 50_000_000; // 50 MB
-});
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.Limits.MaxRequestBodySize = 50_000_000; // 50 MB
@@ -43,7 +89,9 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 });
 
 // Inyección de Repositorios
+
 builder.Services.AddScoped<UsuarioRepository>();
+builder.Services.AddScoped<JwtService>();
 // Si tienes un ProductoRepository, añádelo aquí también:
 // builder.Services.AddScoped<ProductoRepository>();
 
@@ -75,16 +123,16 @@ if (app.Environment.IsDevelopment())
 
 // Redirección HTTPS opcional (puedes comentarlo si da problemas en local)
 // app.UseHttpsRedirection();
-
+app.UseRouting();
 app.UseCors("AllowAll");
 
-app.UseAuthorization();
+app.UseAuthentication();
 
+
+app.UseAuthorization();
 app.UseStaticFiles();
 
 app.MapControllers();
-
-app.Urls.Add("http://0.0.0.0:5062");
 
 
 app.Run();

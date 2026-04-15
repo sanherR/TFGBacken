@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TFGBACKEN.Models
 {
+    [Table("Pedidos")]
+
     public class Pedido
     {
         [Key]
@@ -12,6 +14,9 @@ namespace TFGBACKEN.Models
 
         [Column("comprador_id")]
         public int CompradorId { get; set; }
+            
+        [Column("vendedor_id")]
+        public int VendedorId { get; set; }
 
         [Column("fecha")]
         public DateTime Fecha { get; set; } = DateTime.Now;

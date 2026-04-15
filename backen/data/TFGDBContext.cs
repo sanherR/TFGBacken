@@ -16,21 +16,19 @@ namespace TFGBACKEN.Data
         public DbSet<Mensaje> Mensajes { get; set; }
         public DbSet<Favorito> Favoritos { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
-        public DbSet<DetallePedido> DetallesPedidos { get; set; }
         public DbSet<Valoracion> Valoraciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Usuario>().ToTable("usuarios");
-            modelBuilder.Entity<Producto>().ToTable("productos");
-            modelBuilder.Entity<Categoria>().ToTable("categorias");
-            modelBuilder.Entity<Mensaje>().ToTable("mensajes");
-            modelBuilder.Entity<Favorito>().ToTable("favoritos");
-            modelBuilder.Entity<Pedido>().ToTable("pedidos");
-            modelBuilder.Entity<DetallePedido>().ToTable("detalles_pedido");
-            modelBuilder.Entity<Valoracion>().ToTable("valoraciones");
+            modelBuilder.Entity<Usuario>().ToTable("Usuarios");
+            modelBuilder.Entity<Producto>().ToTable("Productos");
+            modelBuilder.Entity<Categoria>().ToTable("Categorias");
+            modelBuilder.Entity<Mensaje>().ToTable("Mensajes");
+            modelBuilder.Entity<Favorito>().ToTable("Favoritos");
+            modelBuilder.Entity<Pedido>().ToTable("Pedidos");
+            modelBuilder.Entity<Valoracion>().ToTable("Valoraciones");
         }
     }
 }

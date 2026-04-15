@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TFGBACKEN.Models;
 using TFGBACKEN.Repositories;
+using TFGBACKEN.Services;
+using System.Security.Claims;
 
 namespace TFGBACKEN.Controllers
 {
@@ -8,47 +11,52 @@ namespace TFGBACKEN.Controllers
     [Route("api/[controller]")]
     public class UsuariosController : ControllerBase
     {
+
+        private readonly JwtService _jwtService;
+        
+
         private readonly UsuarioRepository _repo;
 
-        public UsuariosController(UsuarioRepository repo)
+        public UsuariosController(UsuarioRepository repo, JwtService jwtService)
         {
             _repo = repo;
+             _jwtService = jwtService;
         }
 
-        // Obtener todos los usuarios
         [HttpGet]
         public async Task<IEnumerable<Usuario>> Get() => 
             await _repo.GetAllAsync();
 
-        // Obtener un usuario por ID
         [HttpGet("{id}")]
         public async Task<Usuario> Get(int id) => 
             await _repo.GetByIdAsync(id);
 
-        // REGISTRO DE USUARIO (Ya lo tenías, es el POST principal)
         [HttpPost]
         public async Task<Usuario> Post([FromBody] Usuario usuario) => 
+        
             await _repo.AddAsync(usuario);
 
-        // LOGIN DE USUARIO (Nuevo método)
-        // La ruta será: api/usuarios/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest datos)
         {
             // Llamamos al método que añadimos en el Repository
-            var user = await _repo.AuthenticateAsync(datos.Email, datos.Password);
+            var user = await _repo.AuthenticateAsync(datos.Email, datos.Contrasena);
             
             if (user == null) 
+            return Unauthorized();
+            var token = _jwtService.GenerateToken(user);
+            return Ok(new LoginResponse
             {
-                // Si no lo encuentra, devuelve un error 401 (No autorizado)
-                return Unauthorized(new { mensaje = "Correo o contraseña incorrectos" });
-            }
+                Token = token,
+                UsuarioId = user.Id,
+                Nombre = user.Nombre,
+                Email = user.Email
+            });
+           
             
-            // Si todo está bien, devuelve el usuario y un código 200 (OK)
-            return Ok(user);
+
         }
 
-        // Actualizar usuario
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] Usuario usuario)
         {
@@ -57,19 +65,11 @@ namespace TFGBACKEN.Controllers
             return NoContent();
         }
 
-        // Borrar usuario
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             await _repo.DeleteAsync(id);
             return NoContent();
         }
-    }
-
-    // Clase auxiliar para recibir los datos de inicio de sesión desde MAUI
-    public class LoginRequest 
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
     }
 }
