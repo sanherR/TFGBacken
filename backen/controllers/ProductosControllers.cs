@@ -7,6 +7,18 @@ using System.Security.Claims;
 
 namespace TFGBACKEN.Controllers
 {
+    // Clase DTO para recibir los datos del formulario (incluyendo la imagen)
+    // Esto soluciona el error de generación de Swagger
+    public class ProductoUploadDto
+    {
+        public string Nombre { get; set; }
+        public string Descripcion { get; set; }
+        public decimal Precio { get; set; }
+        public int UsuarioId { get; set; }
+        public int CategoriaId { get; set; }
+        public IFormFile Imagen { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class ProductosController : ControllerBase
@@ -20,80 +32,57 @@ namespace TFGBACKEN.Controllers
             _env = env;
         }
 
-        // GET: api/Productos (Para ver todos los anuncios)
+        // GET: api/Productos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
         {
             return await _context.Productos.ToListAsync();
         }
 
-    [Authorize]  // POST: api/Productos (Para subir un producto nuevo)
-    [HttpPost]
-    public async Task<ActionResult<Producto>> PostProducto(
-        [FromForm] string nombre,
-        [FromForm] string descripcion,
-        [FromForm] decimal precio,
-        [FromForm] int usuarioId,
-        [FromForm] int categoriaId,
-        [FromForm] IFormFile imagen)
+        [Authorize]
+[HttpPost]
+public async Task<ActionResult<Producto>> PostProducto([FromForm] ProductoUploadDto dto)
+{
+    // 1. Validaciones básicas
+    if (string.IsNullOrWhiteSpace(dto.Nombre))
     {
-        Console.WriteLine("AUTH HEADER: " + Request.Headers["Authorization"]);
-        Console.WriteLine("AUTH => [" + Request.Headers.Authorization + "]");
-        Console.WriteLine("ENTRÓ EN POST PRODUCTO");
-        Console.WriteLine("AUTH HEADER: " + Request.Headers.Authorization);
-        Console.WriteLine("IS AUTH: " + User.Identity?.IsAuthenticated);
-        // Validaciones
-        Console.WriteLine("AUTH HEADER RAW:");
-        Console.WriteLine(Request.Headers["Authorization"].ToString()); 
-        
-        if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(descripcion))
-            return BadRequest("Nombre y descripción son obligatorios.");
-
-        if (precio < 0)
-            return BadRequest("El precio debe ser mayor o igual a cero.");
-
-        string imagenUrl = null;
-
-        if (imagen != null && imagen.Length > 0)
-        {
-            try
-            {
-                var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                var carpeta = Path.Combine(webRoot, "images");
-                if (!Directory.Exists(carpeta))
-                    Directory.CreateDirectory(carpeta);
-
-                var nombreArchivo = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
-                var rutaCompleta = Path.Combine(carpeta, nombreArchivo);
-
-                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
-                {
-                    await imagen.CopyToAsync(stream);
-                }
-
-                imagenUrl = $"/images/{nombreArchivo}";
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error al guardar la imagen: {ex.Message}");
-            }
-        }
-
-        var producto = new Producto
-        {
-            Nombre = nombre,
-            Descripcion = descripcion,
-            Precio = precio,
-            ImagenUrl = imagenUrl,
-            UsuarioId = usuarioId,
-            CategoriaId = categoriaId,
-            Grupo = "Recomendados"
-        };
-
-        _context.Productos.Add(producto);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetProductos), new { id = producto.Id }, producto);
+        return BadRequest("El nombre es obligatorio.");
     }
+
+    string? imagenUrl = null;
+
+    // 2. Lógica de imagen (Simplificada para que veas el error)
+    if (dto.Imagen != null && dto.Imagen.Length > 0)
+    {
+        var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(dto.Imagen.FileName);
+        var ruta = Path.Combine(_env.WebRootPath ?? "wwwroot", "images", nombreArchivo);
+        using (var stream = new FileStream(ruta, FileMode.Create))
+        {
+            await dto.Imagen.CopyToAsync(stream);
+        }
+        imagenUrl = $"/images/{nombreArchivo}";
+    }
+
+    // 3. AQUÍ ESTÁ EL CAMBIO: Llamamos a la variable 'nuevoProducto' 
+    // para que no se confunda con la clase 'Producto'
+    var nuevoProducto = new Producto
+    {
+        Nombre = dto.Nombre,
+        Descripcion = dto.Descripcion,
+        Precio = dto.Precio,
+        ImagenUrl = imagenUrl,
+        UsuarioId = dto.UsuarioId, 
+        CategoriaId = dto.CategoriaId,
+        Grupo = "Recomendados",
+        FechaPublicacion = DateTime.Now 
+    };
+
+    // 4. Guardar
+    _context.Productos.Add(nuevoProducto);
+    await _context.SaveChangesAsync();
+
+    // 5. Retornar (Usamos el ID de la variable nueva)
+    return CreatedAtAction(nameof(GetProductos), new { id = nuevoProducto.Id }, nuevoProducto);
+}
     }
 }
