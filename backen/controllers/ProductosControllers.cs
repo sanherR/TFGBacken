@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace TFGBACKEN.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]")] 
     [ApiController]
     public class ProductosController : ControllerBase
     {
@@ -21,11 +21,11 @@ namespace TFGBACKEN.Controllers
         }
 
         // GET: api/Productos (Para ver todos los anuncios)
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
-        {
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
+    {
             return await _context.Productos.ToListAsync();
-        }
+    }
 
     [Authorize]  // POST: api/Productos (Para subir un producto nuevo)
     [HttpPost]
@@ -95,5 +95,22 @@ namespace TFGBACKEN.Controllers
 
         return CreatedAtAction(nameof(GetProductos), new { id = producto.Id }, producto);
     }
+    
+
+    [HttpGet("mis-productos")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<Producto>>> GetMisProductos()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null)
+            return Unauthorized();
+
+        int userId = int.Parse(userIdClaim);
+
+        var productos = await _context.Productos.Where(p => p.UsuarioId == userId).ToListAsync();
+
+        return Ok(productos);
     }
+}
 }

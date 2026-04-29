@@ -21,6 +21,8 @@ namespace TFGBACKEN.Services
                 Encoding.UTF8.GetBytes(_config["Jwt:Key"])
             );
 
+            
+
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]

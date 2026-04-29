@@ -25,10 +25,12 @@ namespace TFGBACKEN.Models
         [Column("direccion")]
         public string? Direccion { get; set; }
 
+        [Column("perfil_url")]
+        public string? PerfilUrl { get; set; }
+
         [Column("fecha_registro")]
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
-
-         [Column("foto_perfil")]
-        public string? FotoPerfil { get; set; }
     }
+
+       
 }

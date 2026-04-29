@@ -1,10 +1,10 @@
-using TFGBACKEN.Data;
-using TFGBACKEN.Models;
 using Microsoft.EntityFrameworkCore;
+using TFGBACKEN.Models;
+using TFGBacken.Data.Interfaces;
 
-namespace TFGBACKEN.Repositories
+namespace TFGBACKEN.Data.Repositories
 {
-    public class UsuarioRepository
+    public class UsuarioRepository : IUsuarioRepository
     {
         private readonly TfgDbContext _context;
 
@@ -13,11 +13,21 @@ namespace TFGBACKEN.Repositories
             _context = context;
         }
 
-        public async Task<List<Usuario>> GetAllAsync() => 
-            await _context.Usuarios.ToListAsync();
+        public async Task<List<Usuario>> GetAllAsync()
+        {
+            return await _context.Usuarios.ToListAsync();
+        }
 
-        public async Task<Usuario> GetByIdAsync(int id) => 
-            await _context.Usuarios.FindAsync(id);
+        public async Task<Usuario?> GetByIdAsync(int id)
+        {
+            return await _context.Usuarios.FindAsync(id);
+        }
+
+        public async Task<Usuario?> GetByEmailAsync(string email)
+        {
+            return await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
 
         public async Task<Usuario> AddAsync(Usuario usuario)
         {
@@ -26,26 +36,37 @@ namespace TFGBACKEN.Repositories
             return usuario;
         }
 
-        public async Task UpdateAsync(Usuario usuario)
+       public async Task UpdateAsync(Usuario usuario)
         {
-            _context.Entry(usuario).State = EntityState.Modified;
+            var existing = await _context.Usuarios.FindAsync(usuario.Id);
+
+            if (existing == null) return;
+
+            existing.Nombre = usuario.Nombre;
+            existing.Email = usuario.Email;
+            existing.Contrasena = usuario.Contrasena;
+            existing.Telefono = usuario.Telefono;
+            existing.Direccion = usuario.Direccion;
+            existing.PerfilUrl = usuario.PerfilUrl;
+
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
+
             if (usuario != null)
             {
                 _context.Usuarios.Remove(usuario);
                 await _context.SaveChangesAsync();
             }
         }
-         public async Task<Usuario> AuthenticateAsync(string email, string Contrasena)
+
+        public async Task<Usuario?> AuthenticateAsync(string email, string contrasena)
         {
-            // Busca el primer usuario que coincida con el email y la contraseña
             return await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == email && u.Contrasena == Contrasena);
+                .FirstOrDefaultAsync(u => u.Email == email && u.Contrasena == contrasena);
         }
     }
 }

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\TFGBacken\\backen\\backen.csproj": {}
+    "c:\\TFGBacken\\backen\\backen.csproj": {}
   },
   "projects": {
-    "C:\\TFGBacken\\backen\\backen.csproj": {
+    "c:\\TFGBacken\\backen\\backen.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\TFGBacken\\backen\\backen.csproj",
+        "projectUniqueName": "c:\\TFGBacken\\backen\\backen.csproj",
         "projectName": "backen",
-        "projectPath": "C:\\TFGBacken\\backen\\backen.csproj",
+        "projectPath": "c:\\TFGBacken\\backen\\backen.csproj",
         "packagesPath": "C:\\Users\\Playe\\.nuget\\packages\\",
-        "outputPath": "C:\\TFGBacken\\backen\\obj\\",
+        "outputPath": "c:\\TFGBacken\\backen\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Playe\\AppData\\Roaming\\NuGet\\NuGet.Config"

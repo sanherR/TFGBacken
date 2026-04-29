@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TFGBACKEN.Data;
-using TFGBACKEN.Repositories;
+using TFGBACKEN.Data.Repositories;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
