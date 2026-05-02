@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "861mwTAuwn4=",
+  "dgSpecHash": "Ex+McHpn4NI=",
   "success": true,
-  "projectFilePath": "c:\\TFGBacken\\backen\\backen.csproj",
+  "projectFilePath": "C:\\TFGBacken\\backen\\backen.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Playe\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\Playe\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\9.0.0\\microsoft.aspnetcore.authentication.jwtbearer.9.0.0.nupkg.sha512",

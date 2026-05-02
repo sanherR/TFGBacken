@@ -1,116 +1,188 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TFGBACKEN.Data;
-using TFGBACKEN.Models;
 using System.Security.Claims;
+using TFGBACKEN.Models;
+using TFGBacken.Data.Interfaces;
 
 namespace TFGBACKEN.Controllers
 {
-    [Route("api/[controller]")] 
+    [Route("api/[controller]")]
     [ApiController]
     public class ProductosController : ControllerBase
     {
-        private readonly TfgDbContext _context;
+        private readonly IProductosRepository _repository;
         private readonly IWebHostEnvironment _env;
 
-        public ProductosController(TfgDbContext context, IWebHostEnvironment env)
+        public ProductosController(IProductosRepository repository, IWebHostEnvironment env)
         {
-            _context = context;
+            _repository = repository;
             _env = env;
         }
 
-        // GET: api/Productos (Para ver todos los anuncios)
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
-    {
-            return await _context.Productos.ToListAsync();
-    }
-
-    [Authorize]  // POST: api/Productos (Para subir un producto nuevo)
-    [HttpPost]
-    public async Task<ActionResult<Producto>> PostProducto(
-        [FromForm] string nombre,
-        [FromForm] string descripcion,
-        [FromForm] decimal precio,
-        [FromForm] int usuarioId,
-        [FromForm] int categoriaId,
-        [FromForm] IFormFile imagen)
-    {
-        Console.WriteLine("AUTH HEADER: " + Request.Headers["Authorization"]);
-        Console.WriteLine("AUTH => [" + Request.Headers.Authorization + "]");
-        Console.WriteLine("ENTRÓ EN POST PRODUCTO");
-        Console.WriteLine("AUTH HEADER: " + Request.Headers.Authorization);
-        Console.WriteLine("IS AUTH: " + User.Identity?.IsAuthenticated);
-        // Validaciones
-        Console.WriteLine("AUTH HEADER RAW:");
-        Console.WriteLine(Request.Headers["Authorization"].ToString()); 
-        
-        if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(descripcion))
-            return BadRequest("Nombre y descripción son obligatorios.");
-
-        if (precio < 0)
-            return BadRequest("El precio debe ser mayor o igual a cero.");
-
-        string imagenUrl = null;
-
-        if (imagen != null && imagen.Length > 0)
+        // GET: api/productos
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
         {
-            try
+            var productos = await _repository.GetAllAsync();
+            return Ok(productos);
+        }
+
+        // POST: api/productos
+        [Authorize]
+        [HttpPost]
+        public async Task<ActionResult<Producto>> PostProducto(
+            [FromForm] string nombre,
+            [FromForm] string descripcion,
+            [FromForm] decimal precio,
+            [FromForm] int categoriaId,
+            [FromForm] IFormFile imagen)
+        {
+            if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(descripcion))
+                return BadRequest("Nombre y descripción son obligatorios.");
+
+            if (precio < 0)
+                return BadRequest("El precio no puede ser negativo.");
+
+            // 🔐 Usuario desde token (NO desde frontend)
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            int usuarioId = int.Parse(userIdClaim);
+
+            // 📷 Guardar imagen
+            string imagenUrl = null;
+
+            if (imagen != null && imagen.Length > 0)
             {
                 var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                 var carpeta = Path.Combine(webRoot, "images");
+
                 if (!Directory.Exists(carpeta))
                     Directory.CreateDirectory(carpeta);
 
                 var nombreArchivo = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
-                var rutaCompleta = Path.Combine(carpeta, nombreArchivo);
+                var ruta = Path.Combine(carpeta, nombreArchivo);
 
-                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                using (var stream = new FileStream(ruta, FileMode.Create))
                 {
                     await imagen.CopyToAsync(stream);
                 }
 
                 imagenUrl = $"/images/{nombreArchivo}";
             }
-            catch (Exception ex)
+
+            var producto = new Producto
             {
-                return StatusCode(500, $"Error al guardar la imagen: {ex.Message}");
-            }
+                Nombre = nombre,
+                Descripcion = descripcion,
+                Precio = precio,
+                ImagenUrl = imagenUrl,
+                UsuarioId = usuarioId,
+                CategoriaId = categoriaId,
+                Grupo = "Recomendados"
+            };
+
+            await _repository.AddAsync(producto);
+
+            return Ok(producto);
         }
 
-        var producto = new Producto
+        // GET: api/productos/mis-productos
+        [Authorize]
+        [HttpGet("mis-productos")]
+        public async Task<ActionResult<IEnumerable<Producto>>> GetMisProductos()
         {
-            Nombre = nombre,
-            Descripcion = descripcion,
-            Precio = precio,
-            ImagenUrl = imagenUrl,
-            UsuarioId = usuarioId,
-            CategoriaId = categoriaId,
-            Grupo = "Recomendados"
-        };
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        _context.Productos.Add(producto);
-        await _context.SaveChangesAsync();
+            if (userIdClaim == null)
+                return Unauthorized();
 
-        return CreatedAtAction(nameof(GetProductos), new { id = producto.Id }, producto);
-    }
-    
+            int userId = int.Parse(userIdClaim);
 
-    [HttpGet("mis-productos")]
-    [Authorize]
-    public async Task<ActionResult<IEnumerable<Producto>>> GetMisProductos()
+            var productos = await _repository.GetByUsuarioIdAsync(userId);
+
+            return Ok(productos);
+        }
+
+        // DELETE: api/productos/{id}
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarProducto(int id)
+        {
+            var producto = await _repository.GetByIdAsync(id);
+
+            if (producto == null)
+                return NotFound("Producto no encontrado");
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            int usuarioId = int.Parse(userIdClaim);
+
+            if (producto.UsuarioId != usuarioId)
+                return Forbid();
+
+            await _repository.DeleteAsync(id);
+
+            return Ok("Producto eliminado");
+        }
+        [HttpPut("{id}")]
+[Authorize]
+public async Task<IActionResult> ActualizarProducto(
+    int id,
+    [FromForm] string nombre,
+    [FromForm] string descripcion,
+    [FromForm] decimal precio,
+    [FromForm] int categoriaId,
+    [FromForm] IFormFile imagen)
+{
+    var producto = await _repository.GetByIdAsync(id);
+
+    if (producto == null)
+        return NotFound("Producto no encontrado");
+
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (userIdClaim == null)
+        return Unauthorized();
+
+    int usuarioId = int.Parse(userIdClaim);
+
+    if (producto.UsuarioId != usuarioId)
+        return Forbid();
+
+    producto.Nombre = nombre;
+    producto.Descripcion = descripcion;
+    producto.Precio = precio;
+    producto.CategoriaId = categoriaId;
+
+    // 🖼️ imagen opcional
+    if (imagen != null && imagen.Length > 0)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var carpeta = Path.Combine(webRoot, "images");
 
-        if (userIdClaim == null)
-            return Unauthorized();
+        if (!Directory.Exists(carpeta))
+            Directory.CreateDirectory(carpeta);
 
-        int userId = int.Parse(userIdClaim);
+        var nombreArchivo = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
+        var ruta = Path.Combine(carpeta, nombreArchivo);
 
-        var productos = await _context.Productos.Where(p => p.UsuarioId == userId).ToListAsync();
+        using (var stream = new FileStream(ruta, FileMode.Create))
+        {
+            await imagen.CopyToAsync(stream);
+        }
 
-        return Ok(productos);
+        producto.ImagenUrl = $"/images/{nombreArchivo}";
     }
+
+    await _repository.UpdateAsync(producto);
+
+    return Ok(producto);
 }
+    }
 }

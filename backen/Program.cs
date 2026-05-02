@@ -8,9 +8,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TFGBACKEN.Services;
 using Microsoft.Extensions.Options;
+using TFGBacken.Data.Interfaces;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IProductosRepository, ProductosRepository>();
 
 // ==========================================
 // 1. CONFIGURACIÓN DE SERVICIOS (Dependency Injection)
