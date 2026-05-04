@@ -13,6 +13,8 @@ using TFGBacken.Data.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IFavoritosRepository, FavoritosRepository>();
+
 builder.Services.AddScoped<IProductosRepository, ProductosRepository>();
 
 // ==========================================
