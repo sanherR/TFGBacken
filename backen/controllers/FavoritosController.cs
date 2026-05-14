@@ -1,7 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TFGBACKEN.Data;
+using System.Security.Claims;
 using TFGBACKEN.Models;
+using TFGBacken.Data.Interfaces;
 
 namespace TFGBACKEN.Controllers
 {
@@ -9,18 +10,75 @@ namespace TFGBACKEN.Controllers
     [ApiController]
     public class FavoritosController : ControllerBase
     {
-        private readonly TfgDbContext _context;
-        public FavoritosController(TfgDbContext context) { _context = context; }
+        private readonly IFavoritosRepository _repository;
+
+        public FavoritosController(IFavoritosRepository repository)
+        {
+            _repository = repository;
+        }
+
+        [HttpPost("{productoId}")]
+        [Authorize]
+        public async Task<IActionResult> ToggleFavorito(int productoId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            int usuarioId = int.Parse(userIdClaim);
+
+            var favorito = await _repository.GetAsync(usuarioId, productoId);
+
+            if (favorito != null)
+            {
+                await _repository.DeleteAsync(favorito);
+                return Ok(new { favorito = false });
+            }
+
+            await _repository.AddAsync(new Favorito
+            {
+                UsuarioId = usuarioId,
+                ProductoId = productoId
+            });
+
+            return Ok(new { favorito = true });
+        }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Favorito>>> Get() => await _context.Favoritos.ToListAsync();
-
-        [HttpPost]
-        public async Task<ActionResult<Favorito>> Post(Favorito f)
+        [Authorize]
+        public async Task<IActionResult> GetFavoritos()
         {
-            _context.Favoritos.Add(f);
-            await _context.SaveChangesAsync();
-            return Ok(f);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            int usuarioId = int.Parse(userIdClaim);
+
+            var productos = await _repository.GetProductosFavoritosAsync(usuarioId);
+
+            return Ok(productos);
+        }
+        [HttpDelete("{productoId}")]
+        [Authorize]
+        public async Task<IActionResult> EliminarFavorito(int productoId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            int usuarioId = int.Parse(userIdClaim);
+
+            var favorito = await _repository.GetAsync(usuarioId, productoId);
+
+            if (favorito == null)
+                return NotFound("No está en favoritos");
+
+            await _repository.DeleteAsync(favorito);
+
+            return Ok("Eliminado de favoritos");
         }
     }
 }

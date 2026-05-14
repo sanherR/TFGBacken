@@ -16,21 +16,40 @@ namespace TFGBACKEN.Data
         public DbSet<Mensaje> Mensajes { get; set; }
         public DbSet<Favorito> Favoritos { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
-        public DbSet<DetallePedido> DetallesPedidos { get; set; }
         public DbSet<Valoracion> Valoraciones { get; set; }
+        public DbSet<Conversacion> Chats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Usuario>().ToTable("Usuarios");
-            modelBuilder.Entity<Producto>().ToTable("Productos");
-            modelBuilder.Entity<Categoria>().ToTable("Categorias");
-            modelBuilder.Entity<Mensaje>().ToTable("Mensajes");
-            modelBuilder.Entity<Favorito>().ToTable("Favoritos");
-            modelBuilder.Entity<Pedido>().ToTable("Pedidos");
-            modelBuilder.Entity<DetallePedido>().ToTable("Detalles_Pedido");
-            modelBuilder.Entity<Valoracion>().ToTable("Valoraciones");
+            // Mapeo de tablas (ajustado a minúsculas o como esté en tu DB)
+            modelBuilder.Entity<Usuario>().ToTable("usuarios");
+            modelBuilder.Entity<Producto>().ToTable("productos");
+            modelBuilder.Entity<Categoria>().ToTable("categorias");
+            modelBuilder.Entity<Favorito>().ToTable("favoritos");
+            modelBuilder.Entity<Pedido>().ToTable("pedidos");
+            modelBuilder.Entity<Valoracion>().ToTable("valoraciones");
+            modelBuilder.Entity<Conversacion>().ToTable("chats");
+
+            // --- CONFIGURACIÓN CRÍTICA PARA MENSAJES ---
+            modelBuilder.Entity<Mensaje>(entity =>
+            {
+                entity.ToTable("mensajes"); // Nombre de la tabla
+
+                entity.Property(e => e.Id).HasColumnName("id_mensaje");
+                
+                // Forzamos chat_id para que no busque "ConversacionId"
+                entity.Property(e => e.Chat_id).HasColumnName("chat_id"); 
+                
+                entity.Property(e => e.EmisorId).HasColumnName("emisor_id");
+                entity.Property(e => e.Contenido).HasColumnName("contenido");
+                entity.Property(e => e.Fecha).HasColumnName("fecha_envio");
+                
+                // Si la columna 'leido' no existe en tu phpMyAdmin, ignórala aquí.
+                // Si existe, asegúrate de mapearla:
+                // entity.Property(e => e.Leido).HasColumnName("leido");
+            });
         }
     }
 }

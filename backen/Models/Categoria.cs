@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TFGBACKEN.Models
 {
+    [Table("Categorias")]
     public class Categoria
     {
         [Key]

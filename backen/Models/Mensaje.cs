@@ -4,23 +4,24 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TFGBACKEN.Models
 {
-    [Table("Mensajes")]
-    public class Mensaje
-    {
-        [Key]
-        [Column("id_mensaje")]
-        public int Id { get; set; }
+    [Table("mensajes")]
+public class Mensaje
+{
+    [Key]
+    [Column("id_mensaje")]
+    public int Id { get; set; }
 
-        [Column("emisor_id")]
-        public int EmisorId { get; set; }
+    [Column("chat_id")] // <--- Esto obliga a usar tu columna real de phpMyAdmin
+    public int Chat_id { get; set; } 
 
-        [Column("receptor_id")]
-        public int ReceptorId { get; set; }
+    [Column("emisor_id")]
+    public int EmisorId { get; set; }
 
-        [Column("mensaje")]
-        public string Contenido { get; set; } = string.Empty;
+    [Column("contenido")]
+    public string Contenido { get; set; } 
 
-        [Column("fecha")]
-        public DateTime Fecha { get; set; } = DateTime.Now;
-    }
+    [Column("fecha_envio")]
+    public DateTime Fecha { get; set; } = DateTime.Now;
 }
+}
+
