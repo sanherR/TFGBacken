@@ -28,21 +28,22 @@ public async Task<ActionResult> GetProductos()
     
     if (productos == null) return Ok(new List<object>());
 
-    var listaLimpia = productos.Select(p => new {
-        id_producto = p.Id, 
-        nombre = p.Nombre ?? "Sin nombre",
-        descripcion = p.Descripcion ?? "",
-        precio = p.Precio,
-        imagen_url = p.ImagenUrl ?? "",
-        categoria_id = p.CategoriaId,
-        vendido = p.Vendido,
-        estado_producto = p.Estado_producto,
-        caracteristicas = p.Caracteristicas,
-        
-        // --- ESTA ES LA LÍNEA QUE FALTABA ---
-        usuario_id = p.UsuarioId 
-        // ------------------------------------
-    }).ToList();
+    // FILTRO: Solo quitamos los que están vendidos (estado 2)
+    // Los disponibles (0) y los reservados (1) SIGUEN SALIENDO
+    var listaLimpia = productos
+        .Where(p => p.Vendido != 2) // <--- ESTO significa "que no sea igual a 2"
+        .Select(p => new {
+            id_producto = p.Id, 
+            nombre = p.Nombre ?? "Sin nombre",
+            descripcion = p.Descripcion ?? "",
+            precio = p.Precio,
+            imagen_url = p.ImagenUrl ?? "",
+            categoria_id = p.CategoriaId,
+            vendido = p.Vendido,
+            estado_producto = p.Estado_producto,
+            caracteristicas = p.Caracteristicas,
+            usuario_id = p.UsuarioId 
+        }).ToList();
 
     return Ok(listaLimpia);
 }
@@ -285,6 +286,101 @@ public async Task<IActionResult> AceptarReserva(int id, [FromBody] int idComprad
         productoId = id, 
         compradorId = idComprador 
     });
+}
+[HttpPut("{id}/cancelar-reserva")]
+public async Task<IActionResult> CancelarReserva(int id)
+{
+    // 1. Buscamos el producto en el repositorio
+    var producto = await _repository.GetByIdAsync(id);
+
+    if (producto == null)
+    {
+        return NotFound("Producto no encontrado");
+    }
+
+    // 2. Aplicamos la lógica para liberar el producto
+    producto.Vendido = 0;          // 0 = Disponible (Vuelve a aparecer en la tienda)
+    producto.CompradorId = null;    // Quitamos al comprador asociado
+
+    // 3. Guardamos los cambios en la base de datos
+    await _repository.UpdateAsync(producto);
+
+    return Ok(new 
+    { 
+        mensaje = "Reserva cancelada correctamente", 
+        productoId = id, 
+        estado = "Disponible" 
+    });
+}
+[HttpPut("{id}/confirmar-venta")]
+public async Task<IActionResult> ConfirmarVenta(int id)
+{
+    // 1. Buscamos el producto
+    var producto = await _repository.GetByIdAsync(id);
+
+    if (producto == null)
+        return NotFound("Producto no encontrado");
+
+    // 2. Estado 2 = Vendido (Finalizado)
+    producto.Vendido = 2;
+
+    // 3. Guardamos cambios
+    await _repository.UpdateAsync(producto);
+
+    return Ok(new { mensaje = "¡Producto vendido con éxito!" });
+}
+// --- MÉTODO PARA EDITAR PRODUCTOS ---
+[HttpPut("{id}")]
+public async Task<IActionResult> PutProducto(int id, [FromForm] Producto productoDto)
+{
+    try
+    {
+        // 1. Buscamos el producto real en la base de datos
+        var productoExistente = await _repository.GetByIdAsync(id);
+
+        if (productoExistente == null)
+        {
+            return NotFound("Producto no encontrado en la base de datos.");
+        }
+
+        // 2. Actualizamos los campos con los datos que vienen de la App
+        productoExistente.Nombre = productoDto.Nombre;
+        productoExistente.Descripcion = productoDto.Descripcion;
+        productoExistente.Precio = productoDto.Precio;
+        productoExistente.CategoriaId = productoDto.CategoriaId;
+        productoExistente.Estado_producto = productoDto.Estado_producto;
+        productoExistente.Caracteristicas = productoDto.Caracteristicas;
+
+        // 3. Lógica para la imagen (si la App envió una nueva)
+        if (Request.Form.Files.Count > 0)
+        {
+            var archivo = Request.Form.Files[0];
+            if (archivo != null && archivo.Length > 0)
+            {
+                var nombreCarpeta = Path.Combine(_env.WebRootPath, "imagenes");
+                if (!Directory.Exists(nombreCarpeta)) Directory.CreateDirectory(nombreCarpeta);
+
+                var nombreArchivo = $"{Guid.NewGuid()}{Path.GetExtension(archivo.FileName)}";
+                var rutaCompleta = Path.Combine(nombreCarpeta, nombreArchivo);
+
+                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                {
+                    await archivo.CopyToAsync(stream);
+                }
+
+                productoExistente.ImagenUrl = $"/imagenes/{nombreArchivo}";
+            }
+        }
+
+        // 4. Guardamos los cambios usando tu repositorio
+        await _repository.UpdateAsync(productoExistente);
+
+        return Ok(productoExistente);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Error interno: {ex.Message}");
+    }
 }
     
 }
