@@ -139,6 +139,7 @@ public class ProductoUploadRequest
         // GET: api/productos/mis-productos
     
         // GET: api/productos/mis-productos
+// GET: api/productos/mis-productos
 [Authorize]
 [HttpGet("mis-productos")]
 public async Task<ActionResult<IEnumerable<object>>> GetMisProductos()
@@ -149,45 +150,59 @@ public async Task<ActionResult<IEnumerable<object>>> GetMisProductos()
     int userId = int.Parse(userIdClaim);
     var productos = await _repository.GetByUsuarioIdAsync(userId);
 
-    // Transformación plana
+    // SOLUCIÓN TOTAL: Renombramos las claves en minúscula y metemos id_producto
+    // Esto hace que la App lea el ID real de la BD y mapee bien el estado 'vendido'
     var resultado = productos.Select(p => new
     {
-        Id = p.Id,
-        Nombre = p.Nombre,
-        Precio = p.Precio,
-        ImagenUrl = p.ImagenUrl,
-        Vendido = p.Vendido,
+        id_producto = p.Id, // <-- CORREGIDO: Tu app ahora guardará el ID real (4, 5, 6...)
+        nombre = p.Nombre ?? "Sin nombre",
+        precio = p.Precio,
+        descripcion = p.Descripcion ?? "",
+        imagen_url = p.ImagenUrl ?? "",
+        vendido = p.Vendido, // <-- CORREGIDO: En minúscula para que el 'if (p.Vendido != 2)' funcione
         categoria_id = p.CategoriaId,
+        estado_producto = p.Estado_producto ?? "Nuevo",
+        caracteristicas = p.Caracteristicas ?? ""
     }).ToList();
 
     return Ok(resultado);
 }
+       // DELETE: api/productos/{id}
+[Authorize]
+[HttpDelete("{id}")]
+public async Task<IActionResult> DeleteProducto(int id)
+{
+    try
+    {
+        // 1. Buscamos el producto real en la base de datos por el ID de la URL
+        var producto = await _repository.GetByIdAsync(id);
 
-        // DELETE: api/productos/{id}
-        [Authorize]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> EliminarProducto(int id)
+        if (producto == null)
         {
-            var producto = await _repository.GetByIdAsync(id);
-
-            if (producto == null)
-                return NotFound("Producto no encontrado");
-
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (userIdClaim == null)
-                return Unauthorized();
-
-            int usuarioId = int.Parse(userIdClaim);
-
-            if (producto.UsuarioId != usuarioId)
-                return Forbid();
-
-            await _repository.DeleteAsync(id);
-
-            return Ok("Producto eliminado");
+            return NotFound($"No se puede eliminar: Producto con ID {id} no encontrado.");
         }
 
+        // 2. Opcional: Verificación de seguridad si quieres que solo el dueño borre
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim != null)
+        {
+            int usuarioIdActual = int.Parse(userIdClaim);
+            if (producto.UsuarioId != usuarioIdActual)
+            {
+                return Forbid("No tienes permisos para eliminar este producto.");
+            }
+        }
+
+        // 3. Eliminamos físicamente el registro a través del repositorio
+        await _repository.DeleteAsync(id);
+
+        return NoContent(); // Devuelve un 204 limpio (Éxito sin contenido)
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Error interno del servidor al eliminar: {ex.Message}");
+    }
+}
         // PUT: api/productos/{id}
         // PUT: api/productos/{id}
 [HttpPut("{id}")]
@@ -330,20 +345,21 @@ public async Task<IActionResult> ConfirmarVenta(int id)
     return Ok(new { mensaje = "¡Producto vendido con éxito!" });
 }
 // --- MÉTODO PARA EDITAR PRODUCTOS ---
+// --- MÉTODO PARA EDITAR PRODUCTOS CORREGIDO ---
 [HttpPut("{id}")]
 public async Task<IActionResult> PutProducto(int id, [FromForm] Producto productoDto)
 {
     try
     {
-        // 1. Buscamos el producto real en la base de datos
+        // 1. Buscamos el registro original usando el ID limpio que viene en la ruta de la URL
         var productoExistente = await _repository.GetByIdAsync(id);
 
         if (productoExistente == null)
         {
-            return NotFound("Producto no encontrado en la base de datos.");
+            return NotFound($"Producto con ID {id} no encontrado en la base de datos.");
         }
 
-        // 2. Actualizamos los campos con los datos que vienen de la App
+        // 2. Sincronizamos las propiedades directamente sobre el objeto de la BD
         productoExistente.Nombre = productoDto.Nombre;
         productoExistente.Descripcion = productoDto.Descripcion;
         productoExistente.Precio = productoDto.Precio;
@@ -351,35 +367,36 @@ public async Task<IActionResult> PutProducto(int id, [FromForm] Producto product
         productoExistente.Estado_producto = productoDto.Estado_producto;
         productoExistente.Caracteristicas = productoDto.Caracteristicas;
 
-        // 3. Lógica para la imagen (si la App envió una nueva)
+        // 3. Procesamiento de archivos adjuntos (Imagen)
         if (Request.Form.Files.Count > 0)
         {
             var archivo = Request.Form.Files[0];
             if (archivo != null && archivo.Length > 0)
             {
-                var nombreCarpeta = Path.Combine(_env.WebRootPath, "imagenes");
-                if (!Directory.Exists(nombreCarpeta)) Directory.CreateDirectory(nombreCarpeta);
+                var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var carpeta = Path.Combine(webRoot, "images");
+                if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
 
-                var nombreArchivo = $"{Guid.NewGuid()}{Path.GetExtension(archivo.FileName)}";
-                var rutaCompleta = Path.Combine(nombreCarpeta, nombreArchivo);
+                var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(archivo.FileName);
+                var rutaCompleta = Path.Combine(carpeta, nombreArchivo);
 
                 using (var stream = new FileStream(rutaCompleta, FileMode.Create))
                 {
                     await archivo.CopyToAsync(stream);
                 }
 
-                productoExistente.ImagenUrl = $"/imagenes/{nombreArchivo}";
+                productoExistente.ImagenUrl = $"/images/{nombreArchivo}";
             }
         }
 
-        // 4. Guardamos los cambios usando tu repositorio
+        // 4. Guardamos los cambios definitivos en MySql
         await _repository.UpdateAsync(productoExistente);
 
         return Ok(productoExistente);
     }
     catch (Exception ex)
     {
-        return StatusCode(500, $"Error interno: {ex.Message}");
+        return StatusCode(500, $"Error interno del servidor al editar: {ex.Message}");
     }
 }
     
